@@ -16,6 +16,7 @@ export function resolveSeniorContext(user: RelatedUser) {
     return {
       seniorId: user.id,
       seniorName: user.name,
+      caregiverId: user.careRelationshipsAsSenior[0]?.caregiver.id ?? null,
       caregiverName: user.careRelationshipsAsSenior[0]?.caregiver.name ?? null,
     };
   }
@@ -25,6 +26,7 @@ export function resolveSeniorContext(user: RelatedUser) {
   return {
     seniorId: linkedSenior?.id ?? user.id,
     seniorName: linkedSenior?.name ?? "Linked senior",
+    caregiverId: user.id,
     caregiverName: user.name,
   };
 }

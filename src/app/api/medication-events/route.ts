@@ -68,5 +68,35 @@ export async function POST(request: Request) {
     });
   }
 
+  const shouldNotifyCaregiver =
+    body.status === "MISSED" ||
+    body.status === "NEEDS_REVIEW" ||
+    body.verification?.result === "MISMATCH";
+
+  if (shouldNotifyCaregiver) {
+    await db.caregiverEvent.create({
+      data: {
+        seniorId: context.seniorId,
+        caregiverId: context.caregiverId,
+        createdById: user.id,
+        type: body.status === "MISSED" ? "ALERT" : body.status === "NEEDS_REVIEW" ? "REMINDER" : "ESCALATION",
+        severity: body.status === "MISSED" ? "HIGH" : body.status === "NEEDS_REVIEW" ? "MEDIUM" : "HIGH",
+        title:
+          body.status === "MISSED"
+            ? `${prescription.medicationName} dose missed`
+            : `${prescription.medicationName} needs caregiver review`,
+        message:
+          body.status === "MISSED"
+            ? `A scheduled dose for ${prescription.medicationName} was marked as missed.`
+            : body.verification?.explanation ?? `Verification for ${prescription.medicationName} needs follow-up.`,
+        metadata: {
+          medicationEventId: event.id,
+          prescriptionId: prescription.id,
+          verificationResult: body.verification?.result ?? null,
+        },
+      },
+    });
+  }
+
   return NextResponse.json({ id: event.id, status: event.status });
 }
