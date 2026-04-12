@@ -13,10 +13,12 @@ type VerificationState = {
 };
 
 export function CameraCaptureCard({
+  demoModeEnabled,
   prescriptionId,
   medicationName,
   instructions,
 }: {
+  demoModeEnabled: boolean;
   prescriptionId: string;
   medicationName: string;
   instructions: string;
@@ -161,6 +163,34 @@ export function CameraCaptureCard({
     setVerifyPending(false);
   }
 
+  function simulateVerification(
+    scenario: "correct" | "wrong"
+  ) {
+    setError(null);
+    setStatusMessage(null);
+    setCameraState("captured");
+    setPreview(null);
+
+    if (scenario === "correct") {
+      setVerification({
+        result: "VERIFIED",
+        confidence: 98,
+        explanation: "Demo mode instantly matched the medication to the active prescription.",
+        verificationLabel: "Ready to log",
+        source: "demo",
+      });
+      return;
+    }
+
+    setVerification({
+      result: "MISMATCH",
+      confidence: 31,
+      explanation: "Demo mode detected packaging that does not match the expected medication.",
+      verificationLabel: "Possible mismatch",
+      source: "demo",
+    });
+  }
+
   async function logMedicationEvent(status: "TAKEN" | "MISSED" | "NEEDS_REVIEW") {
     setLogPending(true);
     setError(null);
@@ -261,15 +291,65 @@ export function CameraCaptureCard({
               <input accept="image/*" className="hidden" onChange={handleFileChange} type="file" />
             </label>
           </div>
+          {demoModeEnabled ? (
+            <div className="mt-4 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-800">
+                Demo mode shortcuts
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button
+                  className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                  onClick={() => simulateVerification("correct")}
+                  type="button"
+                >
+                  Simulate Correct Medication
+                </button>
+                <button
+                  className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500"
+                  onClick={() => simulateVerification("wrong")}
+                  type="button"
+                >
+                  Simulate Wrong Medication
+                </button>
+                <button
+                  className="rounded-full border border-amber-400 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-200"
+                  onClick={() => logMedicationEvent("MISSED")}
+                  type="button"
+                >
+                  Simulate Missed Dose
+                </button>
+              </div>
+            </div>
+          ) : null}
           {error ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
           {statusMessage ? <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{statusMessage}</p> : null}
           {verification ? (
             <div className="mt-4 rounded-[1.5rem] bg-white p-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-stone-900 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white ${
+                    verification.result === "VERIFIED"
+                      ? "bg-emerald-600"
+                      : verification.result === "REVIEW"
+                        ? "bg-amber-500"
+                        : "bg-rose-600"
+                  }`}
+                >
                   {verification.result}
                 </span>
                 <span className="text-sm font-semibold text-stone-700">{verification.confidence}% confidence</span>
+              </div>
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-stone-200">
+                <div
+                  className={`h-full rounded-full ${
+                    verification.result === "VERIFIED"
+                      ? "bg-emerald-500"
+                      : verification.result === "REVIEW"
+                        ? "bg-amber-500"
+                        : "bg-rose-500"
+                  }`}
+                  style={{ width: `${verification.confidence}%` }}
+                />
               </div>
               <p className="mt-3 text-base font-semibold text-stone-900">{verification.verificationLabel}</p>
               <p className="mt-2 text-sm leading-7 text-stone-600">{verification.explanation}</p>

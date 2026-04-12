@@ -42,6 +42,7 @@ export default async function TimelinePage() {
         <section className="grid gap-4">
           {prescriptions.map((prescription) => (
             <CameraCaptureCard
+              demoModeEnabled={user.demoMode}
               instructions={prescription.instructions}
               key={prescription.id}
               medicationName={`${prescription.medicationName} • ${prescription.dosage}`}
@@ -73,7 +74,15 @@ export default async function TimelinePage() {
                     <p className="mt-1 text-sm text-stone-600">{event.prescription.dosage}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white">
+                    <span
+                      className={`rounded-full px-4 py-2 text-sm font-semibold text-white ${
+                        event.status === "TAKEN"
+                          ? "bg-emerald-600"
+                          : event.status === "MISSED"
+                            ? "bg-rose-600"
+                            : "bg-amber-500"
+                      }`}
+                    >
                       {event.status.replace("_", " ")}
                     </span>
                     <span className="text-sm text-stone-500">{format(event.createdAt, "MMM d, yyyy • h:mm a")}</span>
