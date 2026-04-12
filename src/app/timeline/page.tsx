@@ -35,6 +35,7 @@ export default async function TimelinePage() {
               instructions={prescription.instructions}
               key={prescription.id}
               medicationName={`${prescription.medicationName} • ${prescription.dosage}`}
+              prescriptionId={prescription.id}
             />
           ))}
         </section>

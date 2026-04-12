@@ -4,11 +4,20 @@ import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type CameraState = "idle" | "requesting" | "ready" | "blocked" | "captured";
+type VerificationState = {
+  result: "VERIFIED" | "REVIEW" | "MISMATCH";
+  confidence: number;
+  explanation: string;
+  verificationLabel: string;
+  source: string;
+};
 
 export function CameraCaptureCard({
+  prescriptionId,
   medicationName,
   instructions,
 }: {
+  prescriptionId: string;
   medicationName: string;
   instructions: string;
 }) {
@@ -17,6 +26,9 @@ export function CameraCaptureCard({
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [preview, setPreview] = useState<string | null>(null);
+  const [verification, setVerification] = useState<VerificationState | null>(null);
+  const [verifyPending, setVerifyPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const helperCopy = useMemo(() => {
     switch (cameraState) {
@@ -90,6 +102,8 @@ export function CameraCaptureCard({
   function resetCapture() {
     setPreview(null);
     setCameraState(streamRef.current ? "ready" : "idle");
+    setVerification(null);
+    setError(null);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -102,6 +116,40 @@ export function CameraCaptureCard({
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
     setCameraState("captured");
+    setVerification(null);
+    setError(null);
+  }
+
+  async function runVerification() {
+    if (!preview) {
+      setError("Capture or upload an image before verifying.");
+      return;
+    }
+
+    setVerifyPending(true);
+    setError(null);
+
+    const response = await fetch("/api/verification/mock", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prescriptionId,
+        imageData: preview,
+      }),
+    });
+
+    const payload = (await response.json()) as VerificationState & { error?: string };
+
+    if (!response.ok) {
+      setError(payload.error ?? "Unable to verify this image.");
+      setVerifyPending(false);
+      return;
+    }
+
+    setVerification(payload);
+    setVerifyPending(false);
   }
 
   return (
@@ -162,11 +210,31 @@ export function CameraCaptureCard({
             >
               Reset
             </button>
+            <button
+              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+              onClick={runVerification}
+              type="button"
+            >
+              {verifyPending ? "Verifying..." : "Verify capture"}
+            </button>
             <label className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950">
               Upload photo
               <input accept="image/*" className="hidden" onChange={handleFileChange} type="file" />
             </label>
           </div>
+          {error ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+          {verification ? (
+            <div className="mt-4 rounded-[1.5rem] bg-white p-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-stone-900 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white">
+                  {verification.result}
+                </span>
+                <span className="text-sm font-semibold text-stone-700">{verification.confidence}% confidence</span>
+              </div>
+              <p className="mt-3 text-base font-semibold text-stone-900">{verification.verificationLabel}</p>
+              <p className="mt-2 text-sm leading-7 text-stone-600">{verification.explanation}</p>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
