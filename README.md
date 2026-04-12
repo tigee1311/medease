@@ -6,11 +6,12 @@ It combines:
 - secure email/password auth
 - a large-type senior dashboard
 - prescription management
+- demo mode with instant medication simulation
 - camera capture with graceful fallback
 - instant mock AI verification
 - medication event logging
 - caregiver alerts and notes
-- seeded demo data for a sub-60-second walkthrough
+- seeded demo data for a sub-30-second walkthrough
 
 ## Live Product
 
@@ -22,19 +23,30 @@ It combines:
 - Senior account: `senior@medease.app` / `DemoPass123`
 - Caregiver account: `caregiver@medease.app` / `DemoPass123`
 
-## Quick Demo
+## 30-Second Demo
 
 1. Open the live app and sign in with the senior account.
 2. Confirm that `Demo mode` is enabled in the left sidebar.
-3. Open `Dose log`.
-4. Use `Verify capture` on any active medication card.
-5. Click `Log event`.
-6. Open `Caregiver feed` to see the generated alert or reminder.
+3. On the dashboard, click `Take Medication (Try Demo)`.
+4. Choose one of:
+   `Simulate Correct Medication`
+   `Simulate Wrong Medication`
+   `Simulate Missed Dose`
+5. Show the verification result, confidence score, and alert banner.
+6. Click `Complete demo step`.
+7. Point to the updated dashboard intelligence and caregiver feed.
 
-This flow is intentionally designed to work quickly even if camera permissions are denied:
+Recommended wow moment:
 
-- the camera UI supports upload fallback
-- demo mode returns instant mock verification
+- use `Simulate Wrong Medication`
+- highlight the red mismatch state and confidence bar
+- show the `Caregiver has been notified` banner
+- open `Caregiver feed` to confirm the alert was created
+
+The app still supports the broader medication flow when you want a deeper walkthrough:
+
+- the timeline page supports camera capture and upload fallback
+- demo mode also adds one-click simulation buttons to the tracking cards
 - caregiver events are created automatically for missed or review-required doses
 
 ## Screenshots
@@ -58,12 +70,16 @@ This flow is intentionally designed to work quickly even if camera permissions a
 ## Core Features
 
 - Senior-first interface with high-contrast panels, large hierarchy, and mobile-friendly spacing
+- Dashboard-first demo CTA designed for a judge-friendly medication story in one screen
+- System intelligence layer showing next dose timing, last taken time, and missed-dose alerts
+- Caregiver visibility panel with contact info, monitoring status, and last alert timestamp
 - Prescription cards with schedule times, day-of-week cadence, refill dates, and status controls
 - Camera capture flow with permission handling, photo upload fallback, and verification state feedback
 - Mock AI verification service that produces deterministic demo-friendly verification results
 - Medication timeline that records taken, missed, and review-required events
 - Caregiver event feed that can be triggered automatically or updated manually
 - Demo mode toggle for instant judging and smoother walkthroughs
+- Motion cues for success, mismatch, and step transitions
 
 ## Tech Stack
 
@@ -129,10 +145,12 @@ The live deployment was smoke-tested for:
 - public page load
 - production login with the seeded senior account
 - authenticated dashboard rendering
+- dashboard CTA demo flow execution
 - seeded prescription reads
 - production prescription creation
 - medication event creation
 - caregiver alert creation after a missed-dose write
+- browser-level smoke test with no page or console errors during the demo flow
 
 ## Scripts
 
