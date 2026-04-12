@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SENIOR
+  CAREGIVER
+}
+
+enum RelationshipStatus {
+  ACTIVE
+  PENDING
+  PAUSED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+enum MedicationEventStatus {
+  TAKEN
+  MISSED
+  SKIPPED
+  NEEDS_REVIEW
+}
+
+enum MedicationEventSource {
+  MANUAL
+  CAMERA
+  DEMO
+}
+
+enum VerificationResult {
+  VERIFIED
+  REVIEW
+  MISMATCH
+}
+
+enum CaregiverEventType {
+  CHECK_IN
+  REMINDER
+  ALERT
+  ESCALATION
+  NOTE
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id                           String                @id @default(cuid())
+  email                        String                @unique
+  passwordHash                 String
+  name                         String
+  role                         UserRole              @default(SENIOR)
+  age                          Int?
+  timezone                     String                @default("America/Los_Angeles")
+  phone                        String?
+  demoMode                     Boolean               @default(true)
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt
+  authoredPrescriptions        Prescription[]        @relation("PrescriptionAuthor")
+  medicationEvents             MedicationEvent[]     @relation("MedicationEventLoggedBy")
+  caregiverEvents              CaregiverEvent[]      @relation("CaregiverEventAuthor")
+  verificationAttempts         VerificationAttempt[]
+  careRelationshipsAsSenior    CareRelationship[]    @relation("SeniorRelationship")
+  careRelationshipsAsCaregiver CareRelationship[]    @relation("CaregiverRelationship")
+  managedPrescriptions         Prescription[]        @relation("PrescriptionSenior")
+  medicationTimeline           MedicationEvent[]     @relation("MedicationEventSenior")
+  careFeed                     CaregiverEvent[]      @relation("CaregiverEventSenior")
+  caregiverInbox               CaregiverEvent[]      @relation("CaregiverEventRecipient")
+}
+
+model CareRelationship {
+  id          String             @id @default(cuid())
+  seniorId    String
+  caregiverId String
+  status      RelationshipStatus @default(ACTIVE)
+  notes       String?
+  createdAt   DateTime           @default(now())
+  senior      User               @relation("SeniorRelationship", fields: [seniorId], references: [id], onDelete: Cascade)
+  caregiver   User               @relation("CaregiverRelationship", fields: [caregiverId], references: [id], onDelete: Cascade)
+
+  @@unique([seniorId, caregiverId])
+}
+
+model Prescription {
+  id                   String                @id @default(cuid())
+  seniorId             String
+  createdById          String
+  medicationName       String
+  purpose              String
+  dosage               String
+  instructions         String
+  scheduleTimes        Json
+  daysOfWeek           Json
+  refillDate           DateTime?
+  prescribedAt         DateTime              @default(now())
+  startDate            DateTime
+  endDate              DateTime?
+  status               PrescriptionStatus    @default(ACTIVE)
+  verificationMode     String                @default("camera_or_demo")
+  notes                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  senior               User                  @relation("PrescriptionSenior", fields: [seniorId], references: [id], onDelete: Cascade)
+  createdBy            User                  @relation("PrescriptionAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  medicationEvents     MedicationEvent[]
+  verificationAttempts VerificationAttempt[]
+}
+
+model MedicationEvent {
+  id                  String                @id @default(cuid())
+  prescriptionId      String
+  seniorId            String
+  loggedById          String
+  status              MedicationEventStatus
+  source              MedicationEventSource
+  scheduledFor        DateTime
+  takenAt             DateTime?
+  note                String?
+  adherenceScore      Int?
+  verificationScore   Int?
+  verificationLabel   String?
+  createdAt           DateTime              @default(now())
+  prescription        Prescription          @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  senior              User                  @relation("MedicationEventSenior", fields: [seniorId], references: [id], onDelete: Cascade)
+  loggedBy            User                  @relation("MedicationEventLoggedBy", fields: [loggedById], references: [id], onDelete: Cascade)
+  verificationAttempt VerificationAttempt?
+
+  @@index([seniorId, scheduledFor])
+}
+
+model VerificationAttempt {
+  id              String             @id @default(cuid())
+  prescriptionId  String
+  seniorId        String
+  eventId         String?            @unique
+  result          VerificationResult
+  confidence      Int
+  mode            String
+  capturedAt      DateTime           @default(now())
+  artifactUrl     String?
+  explanation     String
+  createdAt       DateTime           @default(now())
+  prescription    Prescription       @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  senior          User               @relation(fields: [seniorId], references: [id], onDelete: Cascade)
+  medicationEvent MedicationEvent?   @relation(fields: [eventId], references: [id])
+}
+
+model CaregiverEvent {
+  id          String             @id @default(cuid())
+  seniorId    String
+  caregiverId String?
+  createdById String
+  type        CaregiverEventType
+  severity    SeverityLevel      @default(LOW)
+  title       String
+  message     String
+  metadata    Json?
+  resolvedAt  DateTime?
+  createdAt   DateTime           @default(now())
+  senior      User               @relation("CaregiverEventSenior", fields: [seniorId], references: [id], onDelete: Cascade)
+  caregiver   User?              @relation("CaregiverEventRecipient", fields: [caregiverId], references: [id], onDelete: SetNull)
+  createdBy   User               @relation("CaregiverEventAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([seniorId, createdAt])
+}
