@@ -42,8 +42,8 @@ export function DemoModeToggle({ enabled }: { enabled: boolean }) {
       type="button"
     >
       <span>
-        <span className="block text-sm font-semibold uppercase tracking-[0.22em]">Demo mode</span>
-        <span className="mt-1 block text-sm leading-6">
+        <span className="block text-base font-semibold uppercase tracking-[0.22em]">Demo mode</span>
+        <span className="mt-1 block text-base leading-7">
           {isEnabled ? "Instant mock verification for smooth judging." : "Prefer the camera-first verification experience."}
         </span>
       </span>

@@ -48,7 +48,15 @@ export default async function CaregiverPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-2xl font-semibold tracking-tight text-stone-900">{event.title}</h2>
-                    <span className="rounded-full bg-stone-900 px-4 py-2 text-xs font-semibold tracking-[0.2em] text-white">
+                    <span
+                      className={`rounded-full px-4 py-2 text-xs font-semibold tracking-[0.2em] text-white ${
+                        event.severity === "HIGH"
+                          ? "bg-rose-600"
+                          : event.severity === "MEDIUM"
+                            ? "bg-amber-500"
+                            : "bg-emerald-600"
+                      }`}
+                    >
                       {event.type}
                     </span>
                   </div>

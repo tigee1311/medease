@@ -28,6 +28,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), serif;
+  font-size: 18px;
+  line-height: 1.45;
   text-rendering: optimizeLegibility;
 }
 
@@ -55,4 +57,61 @@ a {
 ::selection {
   background: #241b14;
   color: #f7f1ea;
+}
+
+@keyframes success-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.22);
+  }
+  50% {
+    transform: scale(1.01);
+    box-shadow: 0 0 0 16px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes shake-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes slide-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-successPulse {
+  animation: success-pulse 700ms ease-out;
+}
+
+.animate-shakeX {
+  animation: shake-x 520ms ease-in-out;
+}
+
+.animate-slideFade {
+  animation: slide-fade 240ms ease-out;
 }
