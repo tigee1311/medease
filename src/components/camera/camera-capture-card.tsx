@@ -28,6 +28,7 @@ export function CameraCaptureCard({
   const [preview, setPreview] = useState<string | null>(null);
   const [verification, setVerification] = useState<VerificationState | null>(null);
   const [verifyPending, setVerifyPending] = useState(false);
+  const [logPending, setLogPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const helperCopy = useMemo(() => {
@@ -152,6 +153,35 @@ export function CameraCaptureCard({
     setVerifyPending(false);
   }
 
+  async function logMedicationEvent(status: "TAKEN" | "MISSED" | "NEEDS_REVIEW") {
+    setLogPending(true);
+    setError(null);
+
+    const response = await fetch("/api/medication-events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prescriptionId,
+        status,
+        source: verification?.source === "demo" ? "DEMO" : verification ? "CAMERA" : "MANUAL",
+        verification: verification ?? undefined,
+      }),
+    });
+
+    const payload = (await response.json()) as { error?: string };
+
+    if (!response.ok) {
+      setError(payload.error ?? "Unable to log this event.");
+      setLogPending(false);
+      return;
+    }
+
+    setLogPending(false);
+    setError(status === "MISSED" ? "Dose marked as missed. Timeline updated." : "Dose logged. Timeline updated.");
+  }
+
   return (
     <div className="rounded-[1.75rem] border border-stone-200 bg-white p-5 shadow-[0_16px_50px_rgba(87,68,48,0.08)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -233,6 +263,22 @@ export function CameraCaptureCard({
               </div>
               <p className="mt-3 text-base font-semibold text-stone-900">{verification.verificationLabel}</p>
               <p className="mt-2 text-sm leading-7 text-stone-600">{verification.explanation}</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-700"
+                  onClick={() => logMedicationEvent(verification.result === "VERIFIED" ? "TAKEN" : "NEEDS_REVIEW")}
+                  type="button"
+                >
+                  {logPending ? "Logging..." : "Log event"}
+                </button>
+                <button
+                  className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
+                  onClick={() => logMedicationEvent("MISSED")}
+                  type="button"
+                >
+                  Mark missed
+                </button>
+              </div>
             </div>
           ) : null}
         </div>
