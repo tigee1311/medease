@@ -30,6 +30,7 @@ export function CameraCaptureCard({
   const [verifyPending, setVerifyPending] = useState(false);
   const [logPending, setLogPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const helperCopy = useMemo(() => {
     switch (cameraState) {
@@ -55,11 +56,13 @@ export function CameraCaptureCard({
   async function startCamera() {
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState("blocked");
+      setStatusMessage(null);
       return;
     }
 
     try {
       setCameraState("requesting");
+      setStatusMessage(null);
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -98,6 +101,7 @@ export function CameraCaptureCard({
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
     setPreview(dataUrl);
     setCameraState("captured");
+    setStatusMessage(null);
   }
 
   function resetCapture() {
@@ -105,6 +109,7 @@ export function CameraCaptureCard({
     setCameraState(streamRef.current ? "ready" : "idle");
     setVerification(null);
     setError(null);
+    setStatusMessage(null);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -119,16 +124,19 @@ export function CameraCaptureCard({
     setCameraState("captured");
     setVerification(null);
     setError(null);
+    setStatusMessage(null);
   }
 
   async function runVerification() {
     if (!preview) {
       setError("Capture or upload an image before verifying.");
+      setStatusMessage(null);
       return;
     }
 
     setVerifyPending(true);
     setError(null);
+    setStatusMessage(null);
 
     const response = await fetch("/api/verification/mock", {
       method: "POST",
@@ -179,7 +187,8 @@ export function CameraCaptureCard({
     }
 
     setLogPending(false);
-    setError(status === "MISSED" ? "Dose marked as missed. Timeline updated." : "Dose logged. Timeline updated.");
+    setError(null);
+    setStatusMessage(status === "MISSED" ? "Dose marked as missed. Timeline updated." : "Dose logged. Timeline updated.");
   }
 
   return (
@@ -253,6 +262,7 @@ export function CameraCaptureCard({
             </label>
           </div>
           {error ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+          {statusMessage ? <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{statusMessage}</p> : null}
           {verification ? (
             <div className="mt-4 rounded-[1.5rem] bg-white p-4">
               <div className="flex flex-wrap items-center gap-3">
