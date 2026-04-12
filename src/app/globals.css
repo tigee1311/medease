@@ -40,6 +40,15 @@ textarea {
   font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid #c46d1f;
+  outline-offset: 3px;
+}
+
 a {
   color: inherit;
   text-decoration: none;

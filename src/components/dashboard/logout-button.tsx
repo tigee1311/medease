@@ -21,7 +21,7 @@ export function LogoutButton() {
       onClick={handleLogout}
       type="button"
     >
-      {pending ? "Signing out..." : "Sign out"}
+      {pending ? "Signing out..." : "Sign out securely"}
     </button>
   );
 }

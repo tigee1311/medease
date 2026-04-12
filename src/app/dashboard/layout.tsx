@@ -1,6 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { DemoModeToggle } from "@/components/dashboard/demo-mode-toggle";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { requireUser } from "@/lib/auth/user";
 
@@ -39,21 +40,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 <p>{companion}</p>
               </div>
             </div>
-            <nav className="mt-8 grid gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  className="rounded-2xl px-4 py-3 text-base font-semibold text-stone-700 transition hover:bg-stone-100 hover:text-stone-950"
-                  href={item.href}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <DashboardNav items={navItems} />
             <div className="mt-auto pt-8">
-              <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-600">
-                <p className="font-semibold text-stone-900">Demo Mode</p>
-                <p>{user.demoMode ? "On for quick judging and smoother walkthroughs." : "Off. Real camera verification will be preferred."}</p>
+              <div className="mb-4">
+                <DemoModeToggle enabled={user.demoMode} />
               </div>
               <LogoutButton />
             </div>
