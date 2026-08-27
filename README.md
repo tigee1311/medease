@@ -86,7 +86,7 @@ The app still supports the broader medication flow when you want a deeper walkth
 - Next.js 16 App Router
 - TypeScript
 - Tailwind CSS 4
-- Prisma ORM
+- Prisma ORM 7 with the `@prisma/adapter-pg` driver adapter
 - Prisma Postgres on Vercel
 - Custom JWT cookie auth with `jose`
 - Playwright-based screenshot generation for docs
@@ -101,23 +101,27 @@ npm install
 
 ### 2. Create environment variables
 
-Copy `.env.example` to `.env.local` and configure:
+Copy `.env.example` to `.env` and configure:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 Required variables:
 
-- `DATABASE_URL`
-- `AUTH_SECRET`
-- `NEXT_PUBLIC_APP_URL`
+- `DATABASE_URL` points at a PostgreSQL database
+- `AUTH_SECRET` signs the session cookie and is mandatory in production
 
-### 3. Push the schema
+`.env.local` is also read and takes precedence over `.env`, matching Next.js.
+
+### 3. Apply the schema
 
 ```bash
-npx prisma db push
+npx prisma migrate deploy
 ```
+
+Use `npm run prisma:migrate` instead when you are changing `prisma/schema.prisma`
+and need a new migration.
 
 ### 4. Seed demo data
 
@@ -159,6 +163,7 @@ The live deployment was smoke-tested for:
 - `npm run lint` runs ESLint
 - `npm run db:seed` seeds the demo accounts and workflow data
 - `npm run prisma:generate` regenerates the Prisma client
+- `npm run prisma:migrate` creates and applies a new migration during development
 
 The screenshot assets in `docs/screenshots` were generated from the live deployment with:
 
