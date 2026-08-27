@@ -12,7 +12,17 @@ export type SessionUser = {
 const encoder = new TextEncoder();
 
 function getSecret() {
-  return encoder.encode(process.env.AUTH_SECRET ?? "medease-dev-secret-change-me");
+  const secret = process.env.AUTH_SECRET;
+
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET is required to sign and verify MedEase sessions.");
+    }
+
+    return encoder.encode("medease-dev-secret-change-me");
+  }
+
+  return encoder.encode(secret);
 }
 
 export async function createSessionToken(user: SessionUser) {
