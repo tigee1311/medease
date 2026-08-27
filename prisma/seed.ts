@@ -2,6 +2,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import { loadEnvFiles } from "./load-env";
+
+loadEnvFiles();
+
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
